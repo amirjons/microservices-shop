@@ -1,0 +1,66 @@
+/* --- Глобальные CSS переменные (Цветовая схема) --- */
+
+:root {
+  /* Светлая тема (по умолчанию) */
+
+  /* Основной фон страницы (светло-серый) */
+  --bg-primary: #f8f9fa;
+
+  /* Фон карточек и контейнеров (белый) */
+  --bg-secondary: #ffffff;
+
+  /* Градиент для шапки и акцентных элементов */
+  --bg-gradient-start: #667eea;
+  --bg-gradient-end: #764ba2;
+
+  /* Цвета текста */
+  --text-primary: #1f2937;   /* Почти черный, для заголовков */
+  --text-secondary: #6b7280; /* Серый, для подписей */
+  --text-tertiary: #9ca3af;  /* Светло-серый, для второстепенного текста */
+
+  /* Цвет границ и разделителей */
+  --border-color: #e5e7eb;
+
+  /* Тени для создания эффекта глубины */
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.1);
+
+  /* Элементы форм */
+  --input-bg: #ffffff;
+  --input-border: #e5e7eb;
+
+  /* Цвета для скелетон-загрузки */
+  --skeleton-bg: #e5e7eb;
+  --skeleton-shimmer: #f3f4f6;
+}
+
+/* Темная тема */
+[data-theme="dark"] {
+  /* Темно-синий фон */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+
+  /* Более насыщенный градиент для темного режима */
+  --bg-gradient-start: #4c1d95;
+  --bg-gradient-end: #5b21b6;
+
+  /* Инвертированные цвета текста */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+
+  /* Более темные границы */
+  --border-color: #334155;
+
+  /* Более выраженные тени для темного фона */
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.5);
+
+  /* Темные поля ввода */
+  --input-bg: #334155;
+  --input-border: #475569;
+
+  /* Темные цвета загрузки */
+  --skeleton-bg: #334155;
+  --skeleton-shimmer: #475569;
+}

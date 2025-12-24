@@ -1,0 +1,89 @@
+/* --- Базовые анимации появления --- */
+
+/* Плавное появление элемента через прозрачность */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Выезд элемента сверху (используется для шапки сайта) */
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* Появление снизу вверх (для контента вкладок) */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Появление с увеличением масштаба (для карточек статистики) */
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* --- Анимации слайдов (для карточек) --- */
+
+/* Выезд слева направо (для левой колонки/карточки баланса) */
+@keyframes slideInLeft {
+  from { transform: translateX(-50px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Выезд справа налево (для правой колонки/карточки пополнения) */
+@keyframes slideInRight {
+  from { transform: translateX(50px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* --- Эффекты для элементов интерфейса --- */
+
+/* Легкая пульсация (увеличение/уменьшение) для логотипа */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Зеленое свечение (тень) для индикатора "Онлайн" */
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+}
+
+/* Раскрытие линии подчеркивания (для активной вкладки меню) */
+@keyframes expand {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Эффект "пружины" при появлении бейджей статусов */
+@keyframes bounceIn {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Эффект "блика" для скелетон-загрузки (пока данные грузятся) */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Покачивание (для иконки денег на карточке баланса) */
+@keyframes rotate {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+/* Анимация заполнения полоски прогресса (статистика) */
+@keyframes fillAnimation {
+  from { width: 0; }
+}
+
+/* Вертикальное подпрыгивание (для иконок пустых состояний) */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}

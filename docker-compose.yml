@@ -1,0 +1,187 @@
+version: '3.8'
+
+services:
+  # --- Брокер сообщений RabbitMQ ---
+  rabbitmq:
+    image: rabbitmq:3-management-alpine # Версия с веб-интерфейсом управления
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # Порт для общения сервисов (AMQP)
+      - "15672:15672" # Порт веб-интерфейса (http://localhost:15672)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Redis (In-memory хранилище) ---
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- База данных для заказов ---
+  postgres-orders:
+    image: postgres:15-alpine
+    container_name: postgres-orders
+    environment:
+      POSTGRES_USER: orders_user
+      POSTGRES_PASSWORD: orders_password
+      POSTGRES_DB: orders_db
+    volumes:
+      - postgres-orders-data:/var/lib/postgresql/data
+    # Проверяем готовность конкретной БД (-d orders_db)
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U orders_user -d orders_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- База данных для платежей ---
+  postgres-payments:
+    image: postgres:15-alpine
+    container_name: postgres-payments
+    environment:
+      POSTGRES_USER: payments_user
+      POSTGRES_PASSWORD: payments_password
+      POSTGRES_DB: payments_db
+    volumes:
+      - postgres-payments-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U payments_user -d payments_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Сервис заказов (Инстанс 1) ---
+  orders-service-1:
+    build: ./orders-service
+    container_name: orders-service-1
+    ports:
+      - "8001:8000" # Внешний порт 8001 мапится на внутренний 8000
+    environment:
+      DATABASE_URL: postgresql://orders_user:orders_password@postgres-orders:5432/orders_db
+      RABBITMQ_URL: amqp://rabbitmq:5672/
+      REDIS_URL: redis://redis:6379
+      SERVICE_PORT: 8000
+      INSTANCE_ID: 1 # ID для идентификации в логах и WebSocket
+      LOG_LEVEL: INFO
+    # Ждем полной готовности инфраструктуры перед запуском
+    depends_on:
+      postgres-orders:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Проверка, что приложение FastAPI запустилось и отвечает
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # --- Сервис заказов (Инстанс 2) ---
+  # Демонстрация горизонтального масштабирования и балансировки нагрузки
+  orders-service-2:
+    build: ./orders-service
+    container_name: orders-service-2
+    ports:
+      - "8003:8000" # Внешний порт 8003
+    environment:
+      DATABASE_URL: postgresql://orders_user:orders_password@postgres-orders:5432/orders_db
+      RABBITMQ_URL: amqp://rabbitmq:5672/
+      REDIS_URL: redis://redis:6379
+      SERVICE_PORT: 8000
+      INSTANCE_ID: 2
+      LOG_LEVEL: INFO
+    depends_on:
+      postgres-orders:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # --- Сервис платежей ---
+  payments-service:
+    build: ./payments-service
+    container_name: payments-service
+    ports:
+      - "8002:8000"
+    environment:
+      DATABASE_URL: postgresql://payments_user:payments_password@postgres-payments:5432/payments_db
+      RABBITMQ_URL: amqp://rabbitmq:5672/
+      SERVICE_PORT: 8000
+      LOG_LEVEL: INFO
+    depends_on:
+      postgres-payments:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # --- API Gateway ---
+  # Единая точка входа, маршрутизирует запросы к микросервисам
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8000:8000" # Основной порт приложения
+    environment:
+      # Список URL для балансировки нагрузки заказов
+      ORDERS_SERVICE_URL: http://orders-service-1:8000,http://orders-service-2:8000
+      PAYMENTS_SERVICE_URL: http://payments-service:8000
+      REDIS_URL: redis://redis:6379
+      API_GATEWAY_PORT: 8000
+      LOG_LEVEL: INFO
+    depends_on:
+      orders-service-1:
+        condition: service_healthy
+      orders-service-2:
+        condition: service_healthy
+      payments-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # --- Frontend (React) ---
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Фронтенд обращается только к API Gateway
+      REACT_APP_API_URL: http://localhost:8000
+      REACT_APP_WS_URL: ws://localhost:8000/ws
+    depends_on:
+      - api-gateway
+    # Настройки для корректной работы React в Docker
+    stdin_open: true
+    tty: true
+
+# Определение томов для баз данных
+volumes:
+  postgres-orders-data:
+  postgres-payments-data:

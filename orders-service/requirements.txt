@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+psycopg2-binary
+pydantic>=2.4.0
+pydantic-settings
+aio-pika
+redis
+python-multipart
+httpx
+websockets
+uuid6
